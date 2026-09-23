@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/andresMTG/tcgstats-backend/internal/api/controllers"
+	"github.com/andresMTG/tcgstats-backend/pkg/env"
+
 
 
 	"github.com/go-chi/chi/v5"
@@ -26,6 +28,7 @@ func Module() fx.Option {
 	return fx.Module("api", fx.Options(
 		fx.Provide(
 			// Config
+			env.LoadEnvConfiguration[Configuration],
 			chi.NewRouter,
 			NewRouter,
 

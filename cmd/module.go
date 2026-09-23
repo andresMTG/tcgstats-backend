@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/andresMTG/tcgstats-backend/internal/api"
 	"go.uber.org/fx"
 )
 
@@ -10,5 +11,6 @@ func module() fx.Option {
 	return fx.Options(
 		fx.Supply(applicationName),
 		
+		api.Module(),
 	)
 }

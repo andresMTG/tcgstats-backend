@@ -3,6 +3,7 @@ module github.com/andresMTG/tcgstats-backend
 go 1.24.5
 
 require (
+	github.com/caarlos0/env/v9 v9.0.0
 	github.com/go-chi/chi/v5 v5.3.2
 	github.com/stretchr/testify v1.8.1
 	go.uber.org/fx v1.24.0
