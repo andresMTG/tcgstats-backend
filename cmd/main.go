@@ -1,15 +1,16 @@
 package main
 
-
 import (
 	"context"
 	"fmt"
 
+	"github.com/joho/godotenv"
 	"go.uber.org/fx"
 )
 
 func main() {
-ctx := context.Background()
+	ctx := context.Background()
+	godotenv.Load()
 	app := fx.New(
 		module(),
 	)

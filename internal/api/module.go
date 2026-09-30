@@ -9,9 +9,10 @@ import (
 	"time"
 
 	"github.com/andresMTG/tcgstats-backend/internal/api/controllers"
+	"github.com/andresMTG/tcgstats-backend/internal/api/interfaces"
+	"github.com/andresMTG/tcgstats-backend/internal/api/repositories"
+	"github.com/andresMTG/tcgstats-backend/internal/api/services"
 	"github.com/andresMTG/tcgstats-backend/pkg/env"
-
-
 
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/fx"
@@ -22,6 +23,12 @@ type Configuration struct {
 	Port            int    `env:"SERVER_PORT"      envDefault:"8080"`
 	BasePath        string `env:"SERVER_BASE_PATH" envDefault:"/api/"`
 	PprofEnabled    bool   `env:"PPROF_ENABLED"    envDefault:"false"`
+	JWTSecret       string `env:"JWT_SECRET"`
+	JWTExpiration   int    `env:"JWT_EXPIRATION_MINUTES" envDefault:"15"`
+}
+
+func newUsersService(repo interfaces.UserRepository, config *Configuration) (*services.UsersService, error) {
+	return services.NewUsersService(repo, config.JWTSecret, time.Duration(config.JWTExpiration)*time.Minute)
 }
 
 func Module() fx.Option {
@@ -34,9 +41,13 @@ func Module() fx.Option {
 
 			// Controllers
 			controllers.NewHealth,
+			controllers.NewUsers,
 
 			// Services
+			newUsersService,
 
+			// Repositories
+			fx.Annotate(repositories.NewUser, fx.As(new(interfaces.UserRepository))),
 		),
 		fx.Invoke(
 			start,

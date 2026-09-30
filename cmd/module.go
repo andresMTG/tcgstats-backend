@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/andresMTG/tcgstats-backend/internal/api"
+	"github.com/andresMTG/tcgstats-backend/internal/postgres"
 	"go.uber.org/fx"
 )
 
@@ -12,5 +13,6 @@ func module() fx.Option {
 		fx.Supply(applicationName),
 		
 		api.Module(),
+		postgres.Module(),
 	)
 }
