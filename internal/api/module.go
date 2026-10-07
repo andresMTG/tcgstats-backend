@@ -83,7 +83,7 @@ func registerHooks(
 				if err == nil {
 					break
 				}
-				time.Sleep(100 * time.Millisecond)
+				time.Sleep(10 * time.Millisecond)
 			}
 
 			return nil
