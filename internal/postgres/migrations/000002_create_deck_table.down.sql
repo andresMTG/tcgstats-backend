@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS decks;
+DROP TYPE IF EXISTS game_name;

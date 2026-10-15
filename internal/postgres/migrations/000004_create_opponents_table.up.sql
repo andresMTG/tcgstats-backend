@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS opponents (
+    uuid UUID PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    user_uuid UUID REFERENCES users(uuid) ON DELETE CASCADE
+);

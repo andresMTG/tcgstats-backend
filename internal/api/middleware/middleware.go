@@ -5,7 +5,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/andresMTG/tcgstats-backend/internal/api/auth"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 type contextKey string
@@ -16,25 +18,19 @@ func AuthMiddleware(jwtSecret string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			authHeader := r.Header.Get("Authorization")
-			if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+			tokenString, err := accessTokenFromRequest(r)
+			if err != nil {
 				http.Error(w, "unauthorized: missing or invalid token", http.StatusUnauthorized)
 				return
 			}
 
-			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-
-			token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(t *jwt.Token) (interface{}, error) {
-				return []byte(jwtSecret), nil
-			})
-
-			if err != nil || !token.Valid {
+			claims, err := auth.ParseToken(tokenString, jwtSecret)
+			if err != nil || claims.Type != "" && claims.Type != auth.AccessTokenType {
 				http.Error(w, "unauthorized: invalid token", http.StatusUnauthorized)
 				return
 			}
 
-			claims, ok := token.Claims.(*jwt.RegisteredClaims)
-			if !ok || claims.Subject == "" {
+			if _, err := uuid.Parse(claims.Subject); err != nil {
 				http.Error(w, "unauthorized: invalid token payload", http.StatusUnauthorized)
 				return
 			}
@@ -44,4 +40,23 @@ func AuthMiddleware(jwtSecret string) func(http.Handler) http.Handler {
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+func accessTokenFromRequest(r *http.Request) (string, error) {
+	if cookie, err := r.Cookie(auth.AccessCookieName); err == nil {
+		if cookie.Value == "" {
+			return "", jwt.ErrTokenMalformed
+		}
+		return cookie.Value, nil
+	}
+
+	authHeader := r.Header.Get("Authorization")
+	if !strings.HasPrefix(authHeader, "Bearer ") {
+		return "", jwt.ErrTokenMalformed
+	}
+	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+	if tokenString == "" {
+		return "", jwt.ErrTokenMalformed
+	}
+	return tokenString, nil
 }

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/andresMTG/tcgstats-backend/internal/api/controllers"
-	"github.com/andresMTG/tcgstats-backend/internal/api/interfaces"
 	"github.com/andresMTG/tcgstats-backend/internal/api/repositories"
 	"github.com/andresMTG/tcgstats-backend/internal/api/services"
 	"github.com/andresMTG/tcgstats-backend/pkg/env"
@@ -19,35 +18,28 @@ import (
 )
 
 type Configuration struct {
-	ApplicationName string `env:"APP_NAME"         envDefault:"tcgstats-backend"`
-	Port            int    `env:"SERVER_PORT"      envDefault:"8080"`
-	BasePath        string `env:"SERVER_BASE_PATH" envDefault:"/api/"`
-	PprofEnabled    bool   `env:"PPROF_ENABLED"    envDefault:"false"`
-	JWTSecret       string `env:"JWT_SECRET"`
-	JWTExpiration   int    `env:"JWT_EXPIRATION_MINUTES" envDefault:"15"`
-}
-
-func newUsersService(repo interfaces.UserRepository, config *Configuration) (*services.UsersService, error) {
-	return services.NewUsersService(repo, config.JWTSecret, time.Duration(config.JWTExpiration)*time.Minute)
+	ApplicationName    string   `env:"APP_NAME"         envDefault:"tcgstats-backend"`
+	Port               int      `env:"SERVER_PORT"      envDefault:"8080"`
+	BasePath           string   `env:"SERVER_BASE_PATH" envDefault:"/api/"`
+	PprofEnabled       bool     `env:"PPROF_ENABLED"    envDefault:"false"`
+	JWTSecret          string   `env:"JWT_SECRET"`
+	JWTExpiration      int      `env:"JWT_EXPIRATION_MINUTES" envDefault:"15"`
+	CORSAllowedOrigins []string `env:"CORS_ALLOWED_ORIGINS" envSeparator:","`
 }
 
 func Module() fx.Option {
 	return fx.Module("api", fx.Options(
+		repositories.Module,
+		services.Module,
+		controllers.Module,
 		fx.Provide(
 			// Config
 			env.LoadEnvConfiguration[Configuration],
 			chi.NewRouter,
 			NewRouter,
 
-			// Controllers
+			// Health Controller
 			controllers.NewHealth,
-			controllers.NewUsers,
-
-			// Services
-			newUsersService,
-
-			// Repositories
-			fx.Annotate(repositories.NewUser, fx.As(new(interfaces.UserRepository))),
 		),
 		fx.Invoke(
 			start,
