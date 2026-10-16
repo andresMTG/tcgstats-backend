@@ -1,0 +1,2 @@
+ALTER TABLE decks
+    ALTER COLUMN decklist TYPE VARCHAR(255);

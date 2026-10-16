@@ -22,7 +22,8 @@ func TestAnalyticsController_DeckPerformance(t *testing.T) {
 		userID := uuid.New()
 		from := time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)
 		to := time.Date(2026, 10, 31, 0, 0, 0, 0, time.UTC)
-		service.On("DeckPerformance", mock.Anything, userID, &from, &to).Return([]models.DeckPerformance{{
+		game := models.GamePokemon
+		service.On("DeckPerformance", mock.Anything, userID, &from, &to, &game).Return([]models.DeckPerformance{{
 			DeckUUID: uuid.New(),
 			DeckName: "Tempo",
 			MatchRecord: models.MatchRecord{
@@ -30,7 +31,7 @@ func TestAnalyticsController_DeckPerformance(t *testing.T) {
 			},
 		}}, nil).Once()
 		request := withUserID(newRequest(http.MethodGet,
-			"/analytics/decks?from=2026-10-01&to=2026-10-31", ""), userID.String())
+			"/analytics/decks?from=2026-10-01&to=2026-10-31&game=pokemon", ""), userID.String())
 		response := recorder()
 
 		controllers.NewAnalyticsController(service).DeckPerformance(response, request)
@@ -53,7 +54,7 @@ func TestAnalyticsController_DeckPerformance(t *testing.T) {
 		response := recorder()
 		controllers.NewAnalyticsController(service).DeckPerformance(response, request)
 		assert.Equal(t, http.StatusBadRequest, response.Code)
-		service.AssertNotCalled(t, "DeckPerformance", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+		service.AssertNotCalled(t, "DeckPerformance", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 	})
 	t.Run("rejects invalid date format", func(t *testing.T) {
 		service := &mocks.AnalyticsServiceMock{}
@@ -61,7 +62,15 @@ func TestAnalyticsController_DeckPerformance(t *testing.T) {
 		response := recorder()
 		controllers.NewAnalyticsController(service).DeckPerformance(response, request)
 		assert.Equal(t, http.StatusBadRequest, response.Code)
-		service.AssertNotCalled(t, "DeckPerformance", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+		service.AssertNotCalled(t, "DeckPerformance", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	})
+	t.Run("rejects unsupported game", func(t *testing.T) {
+		service := &mocks.AnalyticsServiceMock{}
+		request := withUserID(newRequest(http.MethodGet, "/analytics/decks?game=unknown", ""), uuid.New().String())
+		response := recorder()
+		controllers.NewAnalyticsController(service).DeckPerformance(response, request)
+		assert.Equal(t, http.StatusBadRequest, response.Code)
+		service.AssertNotCalled(t, "DeckPerformance", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 	})
 	t.Run("requires authenticated identity", func(t *testing.T) {
 		service := &mocks.AnalyticsServiceMock{}
@@ -69,12 +78,12 @@ func TestAnalyticsController_DeckPerformance(t *testing.T) {
 		controllers.NewAnalyticsController(service).DeckPerformance(response,
 			newRequest(http.MethodGet, "/analytics/decks", ""))
 		assert.Equal(t, http.StatusUnauthorized, response.Code)
-		service.AssertNotCalled(t, "DeckPerformance", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+		service.AssertNotCalled(t, "DeckPerformance", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 	})
 	t.Run("reports service failure", func(t *testing.T) {
 		service := &mocks.AnalyticsServiceMock{}
 		userID := uuid.New()
-		service.On("DeckPerformance", mock.Anything, userID, (*time.Time)(nil), (*time.Time)(nil)).
+		service.On("DeckPerformance", mock.Anything, userID, (*time.Time)(nil), (*time.Time)(nil), (*models.GameName)(nil)).
 			Return([]models.DeckPerformance(nil), errors.New("database unavailable")).Once()
 		request := withUserID(newRequest(http.MethodGet, "/analytics/decks", ""), userID.String())
 		response := recorder()
@@ -87,7 +96,7 @@ func TestAnalyticsController_DeckPerformance(t *testing.T) {
 func TestAnalyticsController_OpponentPerformance(t *testing.T) {
 	service := &mocks.AnalyticsServiceMock{}
 	userID := uuid.New()
-	service.On("OpponentPerformance", mock.Anything, userID, (*time.Time)(nil), (*time.Time)(nil)).
+	service.On("OpponentPerformance", mock.Anything, userID, (*time.Time)(nil), (*time.Time)(nil), (*models.GameName)(nil)).
 		Return([]models.OpponentPerformance{{OpponentName: "Rival"}}, nil).Once()
 	request := withUserID(newRequest(http.MethodGet, "/analytics/opponents", ""), userID.String())
 	response := recorder()
@@ -100,10 +109,34 @@ func TestAnalyticsController_OpponentPerformance(t *testing.T) {
 	service.AssertExpectations(t)
 }
 
+func TestAnalyticsController_DeckMatchupPerformance(t *testing.T) {
+	service := &mocks.AnalyticsServiceMock{}
+	userID := uuid.New()
+	game := models.GamePokemon
+	service.On("DeckMatchupPerformance", mock.Anything, userID, (*time.Time)(nil), (*time.Time)(nil), &game).
+		Return([]models.DeckMatchupPerformance{{
+			DeckUUID: uuid.New(), DeckName: "Tempo", OpponentDeckArchetype: "Control",
+			MatchRecord: models.MatchRecord{Matches: 2, Wins: 1, Losses: 1, WinRate: 50},
+		}}, nil).Once()
+	request := withUserID(newRequest(http.MethodGet, "/analytics/deck-matchups?game=pokemon", ""), userID.String())
+	response := recorder()
+
+	controllers.NewAnalyticsController(service).DeckMatchupPerformance(response, request)
+
+	require.Equal(t, http.StatusOK, response.Code)
+	var got []models.DeckMatchupPerformance
+	require.NoError(t, json.NewDecoder(response.Body).Decode(&got))
+	require.Len(t, got, 1)
+	assert.Equal(t, "Tempo", got[0].DeckName)
+	assert.Equal(t, "Control", got[0].OpponentDeckArchetype)
+	assert.Equal(t, 50.0, got[0].WinRate)
+	service.AssertExpectations(t)
+}
+
 func TestAnalyticsController_PhasePerformance(t *testing.T) {
 	service := &mocks.AnalyticsServiceMock{}
 	userID := uuid.New()
-	service.On("PhasePerformance", mock.Anything, userID, (*time.Time)(nil), (*time.Time)(nil)).
+	service.On("PhasePerformance", mock.Anything, userID, (*time.Time)(nil), (*time.Time)(nil), (*models.GameName)(nil)).
 		Return([]models.PhasePerformance{{Phase: models.PhaseFinals}}, nil).Once()
 	request := withUserID(newRequest(http.MethodGet, "/analytics/phases", ""), userID.String())
 	response := recorder()
@@ -119,7 +152,7 @@ func TestAnalyticsController_PhasePerformance(t *testing.T) {
 func TestAnalyticsController_TournamentScopePerformance(t *testing.T) {
 	service := &mocks.AnalyticsServiceMock{}
 	userID := uuid.New()
-	service.On("TournamentScopePerformance", mock.Anything, userID, (*time.Time)(nil), (*time.Time)(nil)).
+	service.On("TournamentScopePerformance", mock.Anything, userID, (*time.Time)(nil), (*time.Time)(nil), (*models.GameName)(nil)).
 		Return([]models.TournamentScopePerformance{{Scope: models.ScopePremier}}, nil).Once()
 	request := withUserID(newRequest(http.MethodGet, "/analytics/tournament-scopes", ""), userID.String())
 	response := recorder()

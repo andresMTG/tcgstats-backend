@@ -17,8 +17,8 @@ func NewAnalyticsService(repo interfaces.AnalyticsRepository) interfaces.Analyti
 	return &analyticsService{repo: repo}
 }
 
-func (s *analyticsService) DeckPerformance(ctx context.Context, userUUID uuid.UUID, from, to *time.Time) ([]models.DeckPerformance, error) {
-	performance, err := s.repo.DeckPerformance(ctx, userUUID, from, to)
+func (s *analyticsService) DeckPerformance(ctx context.Context, userUUID uuid.UUID, from, to *time.Time, game *models.GameName) ([]models.DeckPerformance, error) {
+	performance, err := s.repo.DeckPerformance(ctx, userUUID, from, to, game)
 	if err != nil {
 		return nil, err
 	}
@@ -28,8 +28,8 @@ func (s *analyticsService) DeckPerformance(ctx context.Context, userUUID uuid.UU
 	return performance, nil
 }
 
-func (s *analyticsService) OpponentPerformance(ctx context.Context, userUUID uuid.UUID, from, to *time.Time) ([]models.OpponentPerformance, error) {
-	performance, err := s.repo.OpponentPerformance(ctx, userUUID, from, to)
+func (s *analyticsService) DeckMatchupPerformance(ctx context.Context, userUUID uuid.UUID, from, to *time.Time, game *models.GameName) ([]models.DeckMatchupPerformance, error) {
+	performance, err := s.repo.DeckMatchupPerformance(ctx, userUUID, from, to, game)
 	if err != nil {
 		return nil, err
 	}
@@ -39,8 +39,8 @@ func (s *analyticsService) OpponentPerformance(ctx context.Context, userUUID uui
 	return performance, nil
 }
 
-func (s *analyticsService) PhasePerformance(ctx context.Context, userUUID uuid.UUID, from, to *time.Time) ([]models.PhasePerformance, error) {
-	performance, err := s.repo.PhasePerformance(ctx, userUUID, from, to)
+func (s *analyticsService) OpponentPerformance(ctx context.Context, userUUID uuid.UUID, from, to *time.Time, game *models.GameName) ([]models.OpponentPerformance, error) {
+	performance, err := s.repo.OpponentPerformance(ctx, userUUID, from, to, game)
 	if err != nil {
 		return nil, err
 	}
@@ -50,8 +50,19 @@ func (s *analyticsService) PhasePerformance(ctx context.Context, userUUID uuid.U
 	return performance, nil
 }
 
-func (s *analyticsService) TournamentScopePerformance(ctx context.Context, userUUID uuid.UUID, from, to *time.Time) ([]models.TournamentScopePerformance, error) {
-	performance, err := s.repo.TournamentScopePerformance(ctx, userUUID, from, to)
+func (s *analyticsService) PhasePerformance(ctx context.Context, userUUID uuid.UUID, from, to *time.Time, game *models.GameName) ([]models.PhasePerformance, error) {
+	performance, err := s.repo.PhasePerformance(ctx, userUUID, from, to, game)
+	if err != nil {
+		return nil, err
+	}
+	for i := range performance {
+		performance[i].WinRate = calculateWinRate(performance[i].Wins, performance[i].Matches)
+	}
+	return performance, nil
+}
+
+func (s *analyticsService) TournamentScopePerformance(ctx context.Context, userUUID uuid.UUID, from, to *time.Time, game *models.GameName) ([]models.TournamentScopePerformance, error) {
+	performance, err := s.repo.TournamentScopePerformance(ctx, userUUID, from, to, game)
 	if err != nil {
 		return nil, err
 	}

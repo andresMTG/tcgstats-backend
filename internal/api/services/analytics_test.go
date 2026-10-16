@@ -17,13 +17,14 @@ import (
 func TestAnalyticsService_DeckPerformance(t *testing.T) {
 	ctx, userID := context.Background(), uuid.New()
 	from, to := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC), time.Date(2026, 12, 31, 0, 0, 0, 0, time.UTC)
+	game := models.GamePokemon
 	repo := &mocks.AnalyticsRepositoryMock{}
-	repo.On("DeckPerformance", ctx, userID, &from, &to).Return([]models.DeckPerformance{
+	repo.On("DeckPerformance", ctx, userID, &from, &to, &game).Return([]models.DeckPerformance{
 		{DeckName: "A", MatchRecord: models.MatchRecord{Matches: 4, Wins: 2, Draws: 1, Losses: 1}},
 		{DeckName: "B", MatchRecord: models.MatchRecord{Matches: 0}},
 	}, nil).Once()
 
-	got, err := services.NewAnalyticsService(repo).DeckPerformance(ctx, userID, &from, &to)
+	got, err := services.NewAnalyticsService(repo).DeckPerformance(ctx, userID, &from, &to, &game)
 	require.NoError(t, err)
 	require.Len(t, got, 2)
 	assert.Equal(t, 50.0, got[0].WinRate)
@@ -35,13 +36,13 @@ func TestAnalyticsService_DeckPerformance(t *testing.T) {
 func TestAnalyticsService_OpponentPerformance(t *testing.T) {
 	ctx, userID := context.Background(), uuid.New()
 	repo := &mocks.AnalyticsRepositoryMock{}
-	repo.On("OpponentPerformance", ctx, userID, (*time.Time)(nil), (*time.Time)(nil)).
+	repo.On("OpponentPerformance", ctx, userID, (*time.Time)(nil), (*time.Time)(nil), (*models.GameName)(nil)).
 		Return([]models.OpponentPerformance{{
 			OpponentName: "Rival",
 			MatchRecord:  models.MatchRecord{Matches: 3, Wins: 1, Draws: 1, Losses: 1},
 		}}, nil).Once()
 
-	got, err := services.NewAnalyticsService(repo).OpponentPerformance(ctx, userID, nil, nil)
+	got, err := services.NewAnalyticsService(repo).OpponentPerformance(ctx, userID, nil, nil, nil)
 	require.NoError(t, err)
 	require.Len(t, got, 1)
 	assert.InDelta(t, 100.0/3, got[0].WinRate, 0.001)
@@ -49,14 +50,31 @@ func TestAnalyticsService_OpponentPerformance(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestAnalyticsService_DeckMatchupPerformance(t *testing.T) {
+	ctx, userID := context.Background(), uuid.New()
+	game := models.GamePokemon
+	repo := &mocks.AnalyticsRepositoryMock{}
+	repo.On("DeckMatchupPerformance", ctx, userID, (*time.Time)(nil), (*time.Time)(nil), &game).
+		Return([]models.DeckMatchupPerformance{{
+			DeckName: "Tempo", OpponentDeckArchetype: "Control",
+			MatchRecord: models.MatchRecord{Matches: 4, Wins: 3, Draws: 1},
+		}}, nil).Once()
+
+	got, err := services.NewAnalyticsService(repo).DeckMatchupPerformance(ctx, userID, nil, nil, &game)
+	require.NoError(t, err)
+	require.Len(t, got, 1)
+	assert.Equal(t, 75.0, got[0].WinRate)
+	repo.AssertExpectations(t)
+}
+
 func TestAnalyticsService_PhasePerformance(t *testing.T) {
 	ctx, userID := context.Background(), uuid.New()
 	wantErr := errors.New("query failed")
 	repo := &mocks.AnalyticsRepositoryMock{}
-	repo.On("PhasePerformance", ctx, userID, (*time.Time)(nil), (*time.Time)(nil)).
+	repo.On("PhasePerformance", ctx, userID, (*time.Time)(nil), (*time.Time)(nil), (*models.GameName)(nil)).
 		Return([]models.PhasePerformance(nil), wantErr).Once()
 
-	got, err := services.NewAnalyticsService(repo).PhasePerformance(ctx, userID, nil, nil)
+	got, err := services.NewAnalyticsService(repo).PhasePerformance(ctx, userID, nil, nil, nil)
 	assert.Nil(t, got)
 	assert.ErrorIs(t, err, wantErr)
 	repo.AssertExpectations(t)
@@ -65,13 +83,13 @@ func TestAnalyticsService_PhasePerformance(t *testing.T) {
 func TestAnalyticsService_TournamentScopePerformance(t *testing.T) {
 	ctx, userID := context.Background(), uuid.New()
 	repo := &mocks.AnalyticsRepositoryMock{}
-	repo.On("TournamentScopePerformance", ctx, userID, (*time.Time)(nil), (*time.Time)(nil)).
+	repo.On("TournamentScopePerformance", ctx, userID, (*time.Time)(nil), (*time.Time)(nil), (*models.GameName)(nil)).
 		Return([]models.TournamentScopePerformance{{
 			Scope:       models.ScopeMajor,
 			MatchRecord: models.MatchRecord{Matches: 5, Wins: 4, Losses: 1},
 		}}, nil).Once()
 
-	got, err := services.NewAnalyticsService(repo).TournamentScopePerformance(ctx, userID, nil, nil)
+	got, err := services.NewAnalyticsService(repo).TournamentScopePerformance(ctx, userID, nil, nil, nil)
 	require.NoError(t, err)
 	require.Len(t, got, 1)
 	assert.Equal(t, 80.0, got[0].WinRate)

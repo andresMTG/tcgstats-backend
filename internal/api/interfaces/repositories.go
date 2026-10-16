@@ -48,8 +48,9 @@ type MatchRepository interface {
 }
 
 type AnalyticsRepository interface {
-	DeckPerformance(ctx context.Context, userUUID uuid.UUID, from, to *time.Time) ([]models.DeckPerformance, error)
-	OpponentPerformance(ctx context.Context, userUUID uuid.UUID, from, to *time.Time) ([]models.OpponentPerformance, error)
-	PhasePerformance(ctx context.Context, userUUID uuid.UUID, from, to *time.Time) ([]models.PhasePerformance, error)
-	TournamentScopePerformance(ctx context.Context, userUUID uuid.UUID, from, to *time.Time) ([]models.TournamentScopePerformance, error)
+	DeckPerformance(ctx context.Context, userUUID uuid.UUID, from, to *time.Time, game *models.GameName) ([]models.DeckPerformance, error)
+	DeckMatchupPerformance(ctx context.Context, userUUID uuid.UUID, from, to *time.Time, game *models.GameName) ([]models.DeckMatchupPerformance, error)
+	OpponentPerformance(ctx context.Context, userUUID uuid.UUID, from, to *time.Time, game *models.GameName) ([]models.OpponentPerformance, error)
+	PhasePerformance(ctx context.Context, userUUID uuid.UUID, from, to *time.Time, game *models.GameName) ([]models.PhasePerformance, error)
+	TournamentScopePerformance(ctx context.Context, userUUID uuid.UUID, from, to *time.Time, game *models.GameName) ([]models.TournamentScopePerformance, error)
 }

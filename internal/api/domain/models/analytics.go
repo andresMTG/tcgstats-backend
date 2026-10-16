@@ -18,6 +18,13 @@ type DeckPerformance struct {
 	MatchRecord
 }
 
+type DeckMatchupPerformance struct {
+	DeckUUID              uuid.UUID `json:"deck_uuid" gorm:"column:deck_uuid"`
+	DeckName              string    `json:"deck_name" gorm:"column:deck_name"`
+	OpponentDeckArchetype string    `json:"opponent_deck_archetype" gorm:"column:opponent_deck_archetype"`
+	MatchRecord
+}
+
 type OpponentPerformance struct {
 	OpponentUUID uuid.UUID `json:"opponent_uuid" gorm:"column:opponent_uuid"`
 	OpponentName string    `json:"opponent_name" gorm:"column:opponent_name"`

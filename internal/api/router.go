@@ -84,6 +84,7 @@ func start(router *Router) {
 
 				// Analytics
 				protected.Get("/analytics/decks", router.controllers.Analytics.DeckPerformance)
+				protected.Get("/analytics/deck-matchups", router.controllers.Analytics.DeckMatchupPerformance)
 				protected.Get("/analytics/opponents", router.controllers.Analytics.OpponentPerformance)
 				protected.Get("/analytics/phases", router.controllers.Analytics.PhasePerformance)
 				protected.Get("/analytics/tournament-scopes", router.controllers.Analytics.TournamentScopePerformance)

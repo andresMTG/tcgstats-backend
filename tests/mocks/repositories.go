@@ -101,23 +101,28 @@ var _ interfaces.RefreshTokenStore = (*RefreshTokenStoreMock)(nil)
 
 type AnalyticsRepositoryMock struct{ mock.Mock }
 
-func (r *AnalyticsRepositoryMock) DeckPerformance(ctx context.Context, userID uuid.UUID, from, to *time.Time) ([]models.DeckPerformance, error) {
-	args := r.Called(ctx, userID, from, to)
+func (r *AnalyticsRepositoryMock) DeckPerformance(ctx context.Context, userID uuid.UUID, from, to *time.Time, game *models.GameName) ([]models.DeckPerformance, error) {
+	args := r.Called(ctx, userID, from, to, game)
 	performance, _ := args.Get(0).([]models.DeckPerformance)
 	return performance, args.Error(1)
 }
-func (r *AnalyticsRepositoryMock) OpponentPerformance(ctx context.Context, userID uuid.UUID, from, to *time.Time) ([]models.OpponentPerformance, error) {
-	args := r.Called(ctx, userID, from, to)
+func (r *AnalyticsRepositoryMock) DeckMatchupPerformance(ctx context.Context, userID uuid.UUID, from, to *time.Time, game *models.GameName) ([]models.DeckMatchupPerformance, error) {
+	args := r.Called(ctx, userID, from, to, game)
+	performance, _ := args.Get(0).([]models.DeckMatchupPerformance)
+	return performance, args.Error(1)
+}
+func (r *AnalyticsRepositoryMock) OpponentPerformance(ctx context.Context, userID uuid.UUID, from, to *time.Time, game *models.GameName) ([]models.OpponentPerformance, error) {
+	args := r.Called(ctx, userID, from, to, game)
 	performance, _ := args.Get(0).([]models.OpponentPerformance)
 	return performance, args.Error(1)
 }
-func (r *AnalyticsRepositoryMock) PhasePerformance(ctx context.Context, userID uuid.UUID, from, to *time.Time) ([]models.PhasePerformance, error) {
-	args := r.Called(ctx, userID, from, to)
+func (r *AnalyticsRepositoryMock) PhasePerformance(ctx context.Context, userID uuid.UUID, from, to *time.Time, game *models.GameName) ([]models.PhasePerformance, error) {
+	args := r.Called(ctx, userID, from, to, game)
 	performance, _ := args.Get(0).([]models.PhasePerformance)
 	return performance, args.Error(1)
 }
-func (r *AnalyticsRepositoryMock) TournamentScopePerformance(ctx context.Context, userID uuid.UUID, from, to *time.Time) ([]models.TournamentScopePerformance, error) {
-	args := r.Called(ctx, userID, from, to)
+func (r *AnalyticsRepositoryMock) TournamentScopePerformance(ctx context.Context, userID uuid.UUID, from, to *time.Time, game *models.GameName) ([]models.TournamentScopePerformance, error) {
+	args := r.Called(ctx, userID, from, to, game)
 	performance, _ := args.Get(0).([]models.TournamentScopePerformance)
 	return performance, args.Error(1)
 }

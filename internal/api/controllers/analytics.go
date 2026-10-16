@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/andresMTG/tcgstats-backend/internal/api/domain/models"
 	"github.com/andresMTG/tcgstats-backend/internal/api/interfaces"
 	"github.com/andresMTG/tcgstats-backend/internal/api/middleware"
 	"github.com/google/uuid"
@@ -27,7 +28,32 @@ func (c *AnalyticsController) DeckPerformance(w http.ResponseWriter, r *http.Req
 	if !ok {
 		return
 	}
-	performance, err := c.service.DeckPerformance(r.Context(), userUUID, from, to)
+	game, ok := parseAnalyticsGame(w, r)
+	if !ok {
+		return
+	}
+	performance, err := c.service.DeckPerformance(r.Context(), userUUID, from, to, game)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	writeAnalyticsJSON(w, performance)
+}
+
+func (c *AnalyticsController) DeckMatchupPerformance(w http.ResponseWriter, r *http.Request) {
+	userUUID, ok := authenticatedUserUUID(w, r)
+	if !ok {
+		return
+	}
+	from, to, ok := parseAnalyticsDateRange(w, r)
+	if !ok {
+		return
+	}
+	game, ok := parseAnalyticsGame(w, r)
+	if !ok {
+		return
+	}
+	performance, err := c.service.DeckMatchupPerformance(r.Context(), userUUID, from, to, game)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -44,7 +70,11 @@ func (c *AnalyticsController) OpponentPerformance(w http.ResponseWriter, r *http
 	if !ok {
 		return
 	}
-	performance, err := c.service.OpponentPerformance(r.Context(), userUUID, from, to)
+	game, ok := parseAnalyticsGame(w, r)
+	if !ok {
+		return
+	}
+	performance, err := c.service.OpponentPerformance(r.Context(), userUUID, from, to, game)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -61,7 +91,11 @@ func (c *AnalyticsController) PhasePerformance(w http.ResponseWriter, r *http.Re
 	if !ok {
 		return
 	}
-	performance, err := c.service.PhasePerformance(r.Context(), userUUID, from, to)
+	game, ok := parseAnalyticsGame(w, r)
+	if !ok {
+		return
+	}
+	performance, err := c.service.PhasePerformance(r.Context(), userUUID, from, to, game)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -78,7 +112,11 @@ func (c *AnalyticsController) TournamentScopePerformance(w http.ResponseWriter, 
 	if !ok {
 		return
 	}
-	performance, err := c.service.TournamentScopePerformance(r.Context(), userUUID, from, to)
+	game, ok := parseAnalyticsGame(w, r)
+	if !ok {
+		return
+	}
+	performance, err := c.service.TournamentScopePerformance(r.Context(), userUUID, from, to, game)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -127,6 +165,22 @@ func parseAnalyticsDate(value string) (*time.Time, error) {
 		return nil, err
 	}
 	return &date, nil
+}
+
+func parseAnalyticsGame(w http.ResponseWriter, r *http.Request) (*models.GameName, bool) {
+	value := r.URL.Query().Get("game")
+	if value == "" {
+		return nil, true
+	}
+	game := models.GameName(value)
+	switch game {
+	case models.GameMagicTheGathering, models.GamePokemon, models.GameFleshAndBlood,
+		models.GameYugioh, models.GameDigimon, models.GameOnePiece, models.GameLorcana:
+		return &game, true
+	default:
+		http.Error(w, "invalid game", http.StatusBadRequest)
+		return nil, false
+	}
 }
 
 func writeAnalyticsJSON(w http.ResponseWriter, value any) {
