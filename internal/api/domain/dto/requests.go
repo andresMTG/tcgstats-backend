@@ -24,6 +24,8 @@ type CreateDeckRequest struct {
 	Decklist string          `json:"decklist"`
 }
 
+type UpdateDeckRequest = CreateDeckRequest
+
 type CreateTournamentRequest struct {
 	Name              string                 `json:"name"`
 	Date              time.Time              `json:"date"`
@@ -33,9 +35,13 @@ type CreateTournamentRequest struct {
 	DeckUUID          *uuid.UUID             `json:"deck_uuid,omitempty"`
 }
 
+type UpdateTournamentRequest = CreateTournamentRequest
+
 type CreateOpponentRequest struct {
 	Name string `json:"name"`
 }
+
+type UpdateOpponentRequest = CreateOpponentRequest
 
 type CreateMatchRequest struct {
 	Result                models.ResultName `json:"result"`
@@ -45,3 +51,5 @@ type CreateMatchRequest struct {
 	TournamentUUID        uuid.UUID         `json:"tournament_uuid"`
 	OpponentUUID          uuid.UUID         `json:"opponent_uuid"`
 }
+
+type UpdateMatchRequest = CreateMatchRequest

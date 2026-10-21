@@ -21,6 +21,14 @@ func (s *deckService) CreateDeck(ctx context.Context, deck *models.Deck) error {
 	return s.repo.Create(ctx, deck)
 }
 
+func (s *deckService) UpdateDeck(ctx context.Context, deck *models.Deck) error {
+	return s.repo.Update(ctx, deck)
+}
+
+func (s *deckService) DeleteDeck(ctx context.Context, id, userUUID uuid.UUID) error {
+	return s.repo.SoftDelete(ctx, id, userUUID)
+}
+
 func (s *deckService) GetDeckByID(ctx context.Context, id uuid.UUID) (*models.Deck, error) {
 	return s.repo.GetByID(ctx, id)
 }

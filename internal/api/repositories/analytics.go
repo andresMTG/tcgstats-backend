@@ -20,12 +20,9 @@ func NewAnalyticsRepository(db *gorm.DB) interfaces.AnalyticsRepository {
 
 func (r *analyticsRepository) DeckPerformance(ctx context.Context, userUUID uuid.UUID, from, to *time.Time, game *models.GameName) ([]models.DeckPerformance, error) {
 	performance := make([]models.DeckPerformance, 0)
-	query := r.db.WithContext(ctx).
-		Table("matches AS m").
-		Select("d.uuid AS deck_uuid, d.name AS deck_name, "+matchRecordSelect).
-		Joins("JOIN tournaments AS t ON t.uuid = m.tournament_uuid").
-		Joins("JOIN decks AS d ON d.uuid = t.deck_uuid AND d.user_uuid = ?", userUUID).
-		Where("t.user_uuid = ?", userUUID)
+	query := r.activeMatches(ctx, userUUID).
+		Select("d.uuid AS deck_uuid, d.name AS deck_name, " + matchRecordSelect).
+		Where("d.uuid IS NOT NULL")
 	query = applyTournamentDateRange(query, from, to)
 	query = applyTournamentGameFilter(query, game)
 
@@ -37,12 +34,9 @@ func (r *analyticsRepository) DeckPerformance(ctx context.Context, userUUID uuid
 
 func (r *analyticsRepository) DeckMatchupPerformance(ctx context.Context, userUUID uuid.UUID, from, to *time.Time, game *models.GameName) ([]models.DeckMatchupPerformance, error) {
 	performance := make([]models.DeckMatchupPerformance, 0)
-	query := r.db.WithContext(ctx).
-		Table("matches AS m").
-		Select("d.uuid AS deck_uuid, d.name AS deck_name, m.opposing_deck_archetype AS opponent_deck_archetype, "+matchRecordSelect).
-		Joins("JOIN tournaments AS t ON t.uuid = m.tournament_uuid").
-		Joins("JOIN decks AS d ON d.uuid = t.deck_uuid AND d.user_uuid = ?", userUUID).
-		Where("t.user_uuid = ?", userUUID)
+	query := r.activeMatches(ctx, userUUID).
+		Select("d.uuid AS deck_uuid, d.name AS deck_name, m.opposing_deck_archetype AS opponent_deck_archetype, " + matchRecordSelect).
+		Where("d.uuid IS NOT NULL")
 	query = applyTournamentDateRange(query, from, to)
 	query = applyTournamentGameFilter(query, game)
 
@@ -56,12 +50,9 @@ func (r *analyticsRepository) DeckMatchupPerformance(ctx context.Context, userUU
 
 func (r *analyticsRepository) OpponentPerformance(ctx context.Context, userUUID uuid.UUID, from, to *time.Time, game *models.GameName) ([]models.OpponentPerformance, error) {
 	performance := make([]models.OpponentPerformance, 0)
-	query := r.db.WithContext(ctx).
-		Table("matches AS m").
-		Select("o.uuid AS opponent_uuid, o.name AS opponent_name, "+matchRecordSelect).
-		Joins("JOIN tournaments AS t ON t.uuid = m.tournament_uuid").
-		Joins("JOIN opponents AS o ON o.uuid = m.opponent_uuid AND o.user_uuid = ?", userUUID).
-		Where("t.user_uuid = ?", userUUID)
+	query := r.activeMatches(ctx, userUUID).
+		Select("o.uuid AS opponent_uuid, o.name AS opponent_name, " + matchRecordSelect).
+		Where("o.uuid IS NOT NULL")
 	query = applyTournamentDateRange(query, from, to)
 	query = applyTournamentGameFilter(query, game)
 
@@ -73,11 +64,7 @@ func (r *analyticsRepository) OpponentPerformance(ctx context.Context, userUUID 
 
 func (r *analyticsRepository) PhasePerformance(ctx context.Context, userUUID uuid.UUID, from, to *time.Time, game *models.GameName) ([]models.PhasePerformance, error) {
 	performance := make([]models.PhasePerformance, 0)
-	query := r.db.WithContext(ctx).
-		Table("matches AS m").
-		Select("m.phase AS phase, "+matchRecordSelect).
-		Joins("JOIN tournaments AS t ON t.uuid = m.tournament_uuid").
-		Where("t.user_uuid = ?", userUUID)
+	query := r.activeMatches(ctx, userUUID).Select("m.phase AS phase, " + matchRecordSelect)
 	query = applyTournamentDateRange(query, from, to)
 	query = applyTournamentGameFilter(query, game)
 
@@ -89,11 +76,7 @@ func (r *analyticsRepository) PhasePerformance(ctx context.Context, userUUID uui
 
 func (r *analyticsRepository) TournamentScopePerformance(ctx context.Context, userUUID uuid.UUID, from, to *time.Time, game *models.GameName) ([]models.TournamentScopePerformance, error) {
 	performance := make([]models.TournamentScopePerformance, 0)
-	query := r.db.WithContext(ctx).
-		Table("matches AS m").
-		Select("t.scope AS scope, "+matchRecordSelect).
-		Joins("JOIN tournaments AS t ON t.uuid = m.tournament_uuid").
-		Where("t.user_uuid = ?", userUUID)
+	query := r.activeMatches(ctx, userUUID).Select("t.scope AS scope, " + matchRecordSelect)
 	query = applyTournamentDateRange(query, from, to)
 	query = applyTournamentGameFilter(query, game)
 
@@ -101,6 +84,16 @@ func (r *analyticsRepository) TournamentScopePerformance(ctx context.Context, us
 		return nil, err
 	}
 	return performance, nil
+}
+
+func (r *analyticsRepository) activeMatches(ctx context.Context, userUUID uuid.UUID) *gorm.DB {
+	return r.db.WithContext(ctx).
+		Table("matches AS m").
+		Joins("JOIN tournaments AS t ON t.uuid = m.tournament_uuid AND t.user_uuid = ?", userUUID).
+		Joins("JOIN opponents AS o ON o.uuid = m.opponent_uuid AND o.user_uuid = ?", userUUID).
+		Joins("LEFT JOIN decks AS d ON d.uuid = t.deck_uuid AND d.user_uuid = ?", userUUID).
+		Where("m.deleted_at IS NULL AND t.deleted_at IS NULL AND o.deleted_at IS NULL").
+		Where("(t.deck_uuid IS NULL OR (d.uuid IS NOT NULL AND d.deleted_at IS NULL))")
 }
 
 const matchRecordSelect = `

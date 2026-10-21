@@ -48,6 +48,47 @@ func (c *OpponentController) CreateOpponent(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(opponent)
 }
 
+func (c *OpponentController) UpdateOpponent(w http.ResponseWriter, r *http.Request) {
+	userUUID, ok := authenticatedUserUUID(w, r)
+	if !ok {
+		return
+	}
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, "invalid uuid", http.StatusBadRequest)
+		return
+	}
+
+	var req dto.UpdateOpponentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	opponent := &models.Opponent{UUID: id, Name: req.Name, UserUUID: userUUID}
+	if err := c.service.UpdateOpponent(r.Context(), opponent); err != nil {
+		writeMutationError(w, err)
+		return
+	}
+	json.NewEncoder(w).Encode(opponent)
+}
+
+func (c *OpponentController) DeleteOpponent(w http.ResponseWriter, r *http.Request) {
+	userUUID, ok := authenticatedUserUUID(w, r)
+	if !ok {
+		return
+	}
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, "invalid uuid", http.StatusBadRequest)
+		return
+	}
+	if err := c.service.DeleteOpponent(r.Context(), id, userUUID); err != nil {
+		writeMutationError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (c *OpponentController) GetOpponent(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)

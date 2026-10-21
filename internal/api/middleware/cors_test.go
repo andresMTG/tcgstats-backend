@@ -58,6 +58,25 @@ func TestCORSMiddleware_HandlesCredentialedPreflight(t *testing.T) {
 	assert.Contains(t, response.Header().Get("Access-Control-Allow-Headers"), "Content-Type")
 }
 
+func TestCORSMiddleware_AllowsMutationPreflightMethods(t *testing.T) {
+	cors, err := middleware.NewCORSMiddleware([]string{"https://tcgstats.example.com"})
+	require.NoError(t, err)
+
+	for _, method := range []string{http.MethodPut, http.MethodDelete} {
+		t.Run(method, func(t *testing.T) {
+			request := httptest.NewRequest(http.MethodOptions, "/api/decks/id", nil)
+			request.Header.Set("Origin", "https://tcgstats.example.com")
+			request.Header.Set("Access-Control-Request-Method", method)
+			request.Header.Set("Access-Control-Request-Headers", "content-type")
+			response := httptest.NewRecorder()
+			cors(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {})).ServeHTTP(response, request)
+
+			assert.Equal(t, http.StatusNoContent, response.Code)
+			assert.Contains(t, response.Header().Get("Access-Control-Allow-Methods"), method)
+		})
+	}
+}
+
 func TestCORSMiddleware_RejectsUnconfiguredOrigin(t *testing.T) {
 	cors, err := middleware.NewCORSMiddleware([]string{"https://tcgstats.example.com"})
 	require.NoError(t, err)
@@ -86,7 +105,7 @@ func TestCORSMiddleware_RejectsDisallowedPreflightMethodAndHeaders(t *testing.T)
 		method  string
 		headers string
 	}{
-		{name: "unsupported method", method: http.MethodDelete},
+		{name: "unsupported method", method: http.MethodTrace},
 		{name: "unsupported header", method: http.MethodPost, headers: "x-custom-header"},
 	}
 

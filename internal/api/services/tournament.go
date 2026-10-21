@@ -21,6 +21,14 @@ func (s *tournamentService) CreateTournament(ctx context.Context, tournament *mo
 	return s.repo.Create(ctx, tournament)
 }
 
+func (s *tournamentService) UpdateTournament(ctx context.Context, tournament *models.Tournament) error {
+	return s.repo.Update(ctx, tournament)
+}
+
+func (s *tournamentService) DeleteTournament(ctx context.Context, id, userUUID uuid.UUID) error {
+	return s.repo.SoftDelete(ctx, id, userUUID)
+}
+
 func (s *tournamentService) GetTournamentByID(ctx context.Context, id uuid.UUID) (*models.Tournament, error) {
 	return s.repo.GetByID(ctx, id)
 }

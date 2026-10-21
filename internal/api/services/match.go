@@ -21,6 +21,14 @@ func (s *matchService) CreateMatch(ctx context.Context, match *models.Match) err
 	return s.repo.Create(ctx, match)
 }
 
+func (s *matchService) UpdateMatch(ctx context.Context, match *models.Match, userUUID uuid.UUID) error {
+	return s.repo.Update(ctx, match, userUUID)
+}
+
+func (s *matchService) DeleteMatch(ctx context.Context, id, userUUID uuid.UUID) error {
+	return s.repo.SoftDelete(ctx, id, userUUID)
+}
+
 func (s *matchService) GetMatchByID(ctx context.Context, id uuid.UUID) (*models.Match, error) {
 	return s.repo.GetByID(ctx, id)
 }

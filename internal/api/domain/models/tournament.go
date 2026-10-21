@@ -15,6 +15,7 @@ type Tournament struct {
 	IsOfficialCircuit bool            `gorm:"type:boolean;default:false" json:"is_official_circuit"`
 	UserUUID          uuid.UUID       `gorm:"type:uuid" json:"user_uuid"`
 	DeckUUID          *uuid.UUID      `gorm:"type:uuid" json:"deck_uuid"`
+	DeletedAt         *time.Time      `gorm:"type:timestamptz" json:"deleted_at"`
 
 	User *User `gorm:"foreignKey:UserUUID" json:"user,omitempty"`
 	Deck *Deck `gorm:"foreignKey:DeckUUID" json:"deck,omitempty"`

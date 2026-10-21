@@ -15,6 +15,12 @@ type DeckRepositoryMock struct{ mock.Mock }
 func (r *DeckRepositoryMock) Create(ctx context.Context, deck *models.Deck) error {
 	return r.Called(ctx, deck).Error(0)
 }
+func (r *DeckRepositoryMock) Update(ctx context.Context, deck *models.Deck) error {
+	return r.Called(ctx, deck).Error(0)
+}
+func (r *DeckRepositoryMock) SoftDelete(ctx context.Context, id, userID uuid.UUID) error {
+	return r.Called(ctx, id, userID).Error(0)
+}
 func (r *DeckRepositoryMock) GetByID(ctx context.Context, id uuid.UUID) (*models.Deck, error) {
 	args := r.Called(ctx, id)
 	deck, _ := args.Get(0).(*models.Deck)
@@ -30,6 +36,12 @@ type TournamentRepositoryMock struct{ mock.Mock }
 
 func (r *TournamentRepositoryMock) Create(ctx context.Context, tournament *models.Tournament) error {
 	return r.Called(ctx, tournament).Error(0)
+}
+func (r *TournamentRepositoryMock) Update(ctx context.Context, tournament *models.Tournament) error {
+	return r.Called(ctx, tournament).Error(0)
+}
+func (r *TournamentRepositoryMock) SoftDelete(ctx context.Context, id, userID uuid.UUID) error {
+	return r.Called(ctx, id, userID).Error(0)
 }
 func (r *TournamentRepositoryMock) GetByID(ctx context.Context, id uuid.UUID) (*models.Tournament, error) {
 	args := r.Called(ctx, id)
@@ -47,6 +59,12 @@ type OpponentRepositoryMock struct{ mock.Mock }
 func (r *OpponentRepositoryMock) Create(ctx context.Context, opponent *models.Opponent) error {
 	return r.Called(ctx, opponent).Error(0)
 }
+func (r *OpponentRepositoryMock) Update(ctx context.Context, opponent *models.Opponent) error {
+	return r.Called(ctx, opponent).Error(0)
+}
+func (r *OpponentRepositoryMock) SoftDelete(ctx context.Context, id, userID uuid.UUID) error {
+	return r.Called(ctx, id, userID).Error(0)
+}
 func (r *OpponentRepositoryMock) GetByID(ctx context.Context, id uuid.UUID) (*models.Opponent, error) {
 	args := r.Called(ctx, id)
 	opponent, _ := args.Get(0).(*models.Opponent)
@@ -62,6 +80,12 @@ type MatchRepositoryMock struct{ mock.Mock }
 
 func (r *MatchRepositoryMock) Create(ctx context.Context, match *models.Match) error {
 	return r.Called(ctx, match).Error(0)
+}
+func (r *MatchRepositoryMock) Update(ctx context.Context, match *models.Match, userID uuid.UUID) error {
+	return r.Called(ctx, match, userID).Error(0)
+}
+func (r *MatchRepositoryMock) SoftDelete(ctx context.Context, id, userID uuid.UUID) error {
+	return r.Called(ctx, id, userID).Error(0)
 }
 func (r *MatchRepositoryMock) GetByID(ctx context.Context, id uuid.UUID) (*models.Match, error) {
 	args := r.Called(ctx, id)

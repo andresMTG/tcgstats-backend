@@ -50,6 +50,53 @@ func (c *DeckController) CreateDeck(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(deck)
 }
 
+func (c *DeckController) UpdateDeck(w http.ResponseWriter, r *http.Request) {
+	userUUID, ok := authenticatedUserUUID(w, r)
+	if !ok {
+		return
+	}
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, "invalid uuid", http.StatusBadRequest)
+		return
+	}
+
+	var req dto.UpdateDeckRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	deck := &models.Deck{
+		UUID:     id,
+		Name:     req.Name,
+		Game:     req.Game,
+		Decklist: req.Decklist,
+		UserUUID: userUUID,
+	}
+	if err := c.service.UpdateDeck(r.Context(), deck); err != nil {
+		writeMutationError(w, err)
+		return
+	}
+	json.NewEncoder(w).Encode(deck)
+}
+
+func (c *DeckController) DeleteDeck(w http.ResponseWriter, r *http.Request) {
+	userUUID, ok := authenticatedUserUUID(w, r)
+	if !ok {
+		return
+	}
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, "invalid uuid", http.StatusBadRequest)
+		return
+	}
+	if err := c.service.DeleteDeck(r.Context(), id, userUUID); err != nil {
+		writeMutationError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (c *DeckController) GetDeck(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)

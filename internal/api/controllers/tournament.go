@@ -53,6 +53,56 @@ func (c *TournamentController) CreateTournament(w http.ResponseWriter, r *http.R
 	json.NewEncoder(w).Encode(tournament)
 }
 
+func (c *TournamentController) UpdateTournament(w http.ResponseWriter, r *http.Request) {
+	userUUID, ok := authenticatedUserUUID(w, r)
+	if !ok {
+		return
+	}
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, "invalid uuid", http.StatusBadRequest)
+		return
+	}
+
+	var req dto.UpdateTournamentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	tournament := &models.Tournament{
+		UUID:              id,
+		Name:              req.Name,
+		Date:              req.Date,
+		Game:              req.Game,
+		Scope:             req.Scope,
+		IsOfficialCircuit: req.IsOfficialCircuit,
+		UserUUID:          userUUID,
+		DeckUUID:          req.DeckUUID,
+	}
+	if err := c.service.UpdateTournament(r.Context(), tournament); err != nil {
+		writeMutationError(w, err)
+		return
+	}
+	json.NewEncoder(w).Encode(tournament)
+}
+
+func (c *TournamentController) DeleteTournament(w http.ResponseWriter, r *http.Request) {
+	userUUID, ok := authenticatedUserUUID(w, r)
+	if !ok {
+		return
+	}
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, "invalid uuid", http.StatusBadRequest)
+		return
+	}
+	if err := c.service.DeleteTournament(r.Context(), id, userUUID); err != nil {
+		writeMutationError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (c *TournamentController) GetTournament(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)

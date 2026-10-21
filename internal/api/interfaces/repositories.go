@@ -24,24 +24,32 @@ type RefreshTokenStore interface {
 
 type DeckRepository interface {
 	Create(ctx context.Context, deck *models.Deck) error
+	Update(ctx context.Context, deck *models.Deck) error
+	SoftDelete(ctx context.Context, id, userUUID uuid.UUID) error
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Deck, error)
 	ListByUser(ctx context.Context, userUUID uuid.UUID, gameFilter *models.GameName) ([]*models.Deck, error)
 }
 
 type TournamentRepository interface {
 	Create(ctx context.Context, tournament *models.Tournament) error
+	Update(ctx context.Context, tournament *models.Tournament) error
+	SoftDelete(ctx context.Context, id, userUUID uuid.UUID) error
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Tournament, error)
 	ListByUser(ctx context.Context, userUUID uuid.UUID) ([]*models.Tournament, error)
 }
 
 type OpponentRepository interface {
 	Create(ctx context.Context, opponent *models.Opponent) error
+	Update(ctx context.Context, opponent *models.Opponent) error
+	SoftDelete(ctx context.Context, id, userUUID uuid.UUID) error
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Opponent, error)
 	ListByUser(ctx context.Context, userUUID uuid.UUID) ([]*models.Opponent, error)
 }
 
 type MatchRepository interface {
 	Create(ctx context.Context, match *models.Match) error
+	Update(ctx context.Context, match *models.Match, userUUID uuid.UUID) error
+	SoftDelete(ctx context.Context, id, userUUID uuid.UUID) error
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Match, error)
 	ListByTournament(ctx context.Context, tournamentUUID uuid.UUID, resultFilter *models.ResultName) ([]*models.Match, error)
 	ListByDeck(ctx context.Context, deckUUID uuid.UUID, resultFilter *models.ResultName) ([]*models.Match, error)

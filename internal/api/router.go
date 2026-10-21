@@ -65,20 +65,28 @@ func start(router *Router) {
 				protected.Post("/decks", router.controllers.Deck.CreateDeck)
 				protected.Get("/decks", router.controllers.Deck.ListUserDecks)
 				protected.Get("/decks/{id}", router.controllers.Deck.GetDeck)
+				protected.Put("/decks/{id}", router.controllers.Deck.UpdateDeck)
+				protected.Delete("/decks/{id}", router.controllers.Deck.DeleteDeck)
 
 				// Tournaments
 				protected.Post("/tournaments", router.controllers.Tournament.CreateTournament)
 				protected.Get("/tournaments", router.controllers.Tournament.ListUserTournaments)
 				protected.Get("/tournaments/{id}", router.controllers.Tournament.GetTournament)
+				protected.Put("/tournaments/{id}", router.controllers.Tournament.UpdateTournament)
+				protected.Delete("/tournaments/{id}", router.controllers.Tournament.DeleteTournament)
 
 				// Opponents
 				protected.Post("/opponents", router.controllers.Opponent.CreateOpponent)
 				protected.Get("/opponents", router.controllers.Opponent.ListUserOpponents)
 				protected.Get("/opponents/{id}", router.controllers.Opponent.GetOpponent)
+				protected.Put("/opponents/{id}", router.controllers.Opponent.UpdateOpponent)
+				protected.Delete("/opponents/{id}", router.controllers.Opponent.DeleteOpponent)
 
 				// Matches
 				protected.Post("/matches", router.controllers.Match.CreateMatch)
 				protected.Get("/matches/{id}", router.controllers.Match.GetMatch)
+				protected.Put("/matches/{id}", router.controllers.Match.UpdateMatch)
+				protected.Delete("/matches/{id}", router.controllers.Match.DeleteMatch)
 				protected.Get("/tournaments/{tournamentId}/matches", router.controllers.Match.ListTournamentMatches)
 				protected.Get("/decks/{deckId}/matches", router.controllers.Match.ListDeckMatches)
 

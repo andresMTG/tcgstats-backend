@@ -21,6 +21,14 @@ func (s *opponentService) CreateOpponent(ctx context.Context, opponent *models.O
 	return s.repo.Create(ctx, opponent)
 }
 
+func (s *opponentService) UpdateOpponent(ctx context.Context, opponent *models.Opponent) error {
+	return s.repo.Update(ctx, opponent)
+}
+
+func (s *opponentService) DeleteOpponent(ctx context.Context, id, userUUID uuid.UUID) error {
+	return s.repo.SoftDelete(ctx, id, userUUID)
+}
+
 func (s *opponentService) GetOpponentByID(ctx context.Context, id uuid.UUID) (*models.Opponent, error) {
 	return s.repo.GetByID(ctx, id)
 }

@@ -12,6 +12,7 @@ import (
 var (
 	ErrInvalidCredentials  = errors.New("invalid email or password")
 	ErrInvalidRefreshToken = errors.New("invalid refresh token")
+	ErrRecordNotFound      = errors.New("record not found or not owned by user")
 )
 
 type UserService interface {
@@ -24,24 +25,32 @@ type UserService interface {
 
 type DeckService interface {
 	CreateDeck(ctx context.Context, deck *models.Deck) error
+	UpdateDeck(ctx context.Context, deck *models.Deck) error
+	DeleteDeck(ctx context.Context, id, userUUID uuid.UUID) error
 	GetDeckByID(ctx context.Context, id uuid.UUID) (*models.Deck, error)
 	ListUserDecks(ctx context.Context, userUUID uuid.UUID, gameFilter *models.GameName) ([]*models.Deck, error)
 }
 
 type TournamentService interface {
 	CreateTournament(ctx context.Context, tournament *models.Tournament) error
+	UpdateTournament(ctx context.Context, tournament *models.Tournament) error
+	DeleteTournament(ctx context.Context, id, userUUID uuid.UUID) error
 	GetTournamentByID(ctx context.Context, id uuid.UUID) (*models.Tournament, error)
 	ListUserTournaments(ctx context.Context, userUUID uuid.UUID) ([]*models.Tournament, error)
 }
 
 type OpponentService interface {
 	CreateOpponent(ctx context.Context, opponent *models.Opponent) error
+	UpdateOpponent(ctx context.Context, opponent *models.Opponent) error
+	DeleteOpponent(ctx context.Context, id, userUUID uuid.UUID) error
 	GetOpponentByID(ctx context.Context, id uuid.UUID) (*models.Opponent, error)
 	ListUserOpponents(ctx context.Context, userUUID uuid.UUID) ([]*models.Opponent, error)
 }
 
 type MatchService interface {
 	CreateMatch(ctx context.Context, match *models.Match) error
+	UpdateMatch(ctx context.Context, match *models.Match, userUUID uuid.UUID) error
+	DeleteMatch(ctx context.Context, id, userUUID uuid.UUID) error
 	GetMatchByID(ctx context.Context, id uuid.UUID) (*models.Match, error)
 	ListTournamentMatches(ctx context.Context, tournamentUUID uuid.UUID, resultFilter *models.ResultName) ([]*models.Match, error)
 	ListDeckMatches(ctx context.Context, deckUUID uuid.UUID, resultFilter *models.ResultName) ([]*models.Match, error)

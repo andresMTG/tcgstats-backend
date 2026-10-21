@@ -8,8 +8,10 @@ import (
 )
 
 var allowedCORSMethods = map[string]struct{}{
-	http.MethodGet:  {},
-	http.MethodPost: {},
+	http.MethodGet:    {},
+	http.MethodPost:   {},
+	http.MethodPut:    {},
+	http.MethodDelete: {},
 }
 
 var allowedCORSHeaders = map[string]struct{}{
@@ -48,7 +50,7 @@ func NewCORSMiddleware(origins []string) (func(http.Handler) http.Handler, error
 				}
 				w.Header().Set("Access-Control-Allow-Origin", origin)
 				w.Header().Set("Access-Control-Allow-Credentials", "true")
-				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 				w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
 				w.Header().Set("Access-Control-Max-Age", "600")
 				w.WriteHeader(http.StatusNoContent)
