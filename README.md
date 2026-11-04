@@ -33,17 +33,25 @@ contabilizados separadamente.
 O Redis é usado para armazenar sessões de refresh token. A aplicação requer
 Redis 6.2 ou superior para consumir e revogar tokens atomicamente com `GETDEL`.
 
-Para iniciar a instância local definida em `docker-compose.yml`, pare qualquer
-Redis que já esteja usando a porta `6379` e execute na pasta do backend:
+Para iniciar a API e suas dependências (PostgreSQL e Redis) definidas em
+`docker-compose.yml`, execute na pasta do backend:
 
 ```powershell
-docker compose up -d redis
+Copy-Item .env.example .env
+# Configure JWT_SECRET no arquivo .env antes de iniciar.
+docker compose up --build -d
 docker compose ps
 ```
 
-Os dados são mantidos no volume Docker `redis-data` mesmo que o container seja
-recriado. O serviço publica a porta somente em `127.0.0.1`, conforme o padrão
-local de `REDIS_ADDR`.
+A API ficará disponível em `http://localhost:8080`; PostgreSQL e Redis também
+ficam acessíveis pelo host em `localhost:5432` e `127.0.0.1:6379`. Dentro da
+rede Docker, a aplicação usa os hosts `postgres` e `redis`. O Compose substitui
+`DSN` e `REDIS_ADDR` para esses endereços, sem alterar a configuração para
+execução direta no host.
+
+Os dados são mantidos nos volumes Docker `postgres-data` e `redis-data` mesmo
+que os containers sejam recriados. Para parar os serviços sem apagar os dados,
+execute `docker compose down`.
 
 ## Autenticação e sessões
 
@@ -98,8 +106,11 @@ Copy-Item .env.example .env
 ```
 
 Configure `DSN` e `JWT_SECRET` no arquivo. O exemplo usa PostgreSQL e Redis
-locais; ajuste credenciais, host e portas conforme o ambiente. Gere um segredo
-JWT próprio com um gerador criptograficamente seguro (por exemplo,
+locais para execução direta do backend; ajuste credenciais, host e portas
+conforme o ambiente. No Compose, `POSTGRES_DB`, `POSTGRES_USER` e
+`POSTGRES_PASSWORD` configuram o container PostgreSQL, e o Compose monta o
+`DSN` da aplicação usando o host interno `postgres`. Gere um segredo JWT
+próprio com um gerador criptograficamente seguro (por exemplo,
 `openssl rand -base64 48`) e nunca reutilize o valor de exemplo em produção.
 O arquivo `.env` é ignorado pelo Git.
 
@@ -108,6 +119,9 @@ Variáveis disponíveis:
 | Variável | Padrão | Descrição |
 | --- | --- | --- |
 | `DSN` | — | String de conexão PostgreSQL (obrigatória). |
+| `POSTGRES_DB` | `tcgstats` no Compose | Banco inicial criado pelo container PostgreSQL. |
+| `POSTGRES_USER` | `tcgstats` no Compose | Usuário inicial do container PostgreSQL. |
+| `POSTGRES_PASSWORD` | `tcgstats` no Compose | Senha local do container PostgreSQL; altere para outros ambientes. |
 | `APP_NAME` | `tcgstats-backend` | Nome da aplicação. |
 | `SERVER_PORT` | `8080` | Porta HTTP. |
 | `SERVER_BASE_PATH` | `/api/` | Prefixo das rotas da API. |
